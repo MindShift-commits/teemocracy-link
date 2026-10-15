@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TEE-MOCRACY Stats</title>
+<meta name="robots" content="noindex">
+<style>
+:root{--paper:#f4f2ee;--ink:#141414;--red:#b21e26;--mute:#6b6866;--line:#d9d5ce;--bar:#c8bee6}
+@media (prefers-color-scheme: dark){:root{--paper:#141414;--ink:#f4f2ee;--mute:#a8a4a0;--line:#2b2a28;--bar:#4a3f73;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.4 system-ui,sans-serif;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:720px;margin:0 auto}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--mute);margin:0 0 18px;font-size:14px}
+h2{font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);margin:26px 0 8px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute);font-weight:600}
+td.n{text-align:right;white-space:nowrap}
+.bar{height:8px;background:var(--bar);border-radius:4px;min-width:2px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.tile{border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.tile b{display:block;font-size:26px;line-height:1.1}
+.tile span{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.05em}
+button{font:inherit;padding:8px 14px;border:1px solid var(--line);background:transparent;color:inherit;border-radius:6px;cursor:pointer}
+.note{color:var(--mute);font-size:13px;margin-top:20px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>TEE-MOCRACY link stats</h1>
+  <p class="sub">Visits to the link page and taps per tee, since 15 Oct 2026. <button id="refresh">Refresh</button> <span id="ts"></span></p>
+
+  <h2>Visits by source</h2>
+  <div class="tiles" id="visits"></div>
+
+  <h2>Taps per tee (all sources)</h2>
+  <table><thead><tr><th>Tee</th><th>Taps</th><th></th><th>yt</th><th>ig</th><th>wa</th><th>fb</th><th>direct</th></tr></thead><tbody id="tees"></tbody></table>
+
+  <h2>Other</h2>
+  <div class="tiles" id="other"></div>
+
+  <p class="note">Taps = someone opened the link page and tapped that tee. Compare with orders in the Qikink dashboard to see drop-off per tee. Sources come from the link used: ?s=yt, ?s=ig, ?s=wa, ?s=fb.</p>
+</div>
+<script>
+(function(){
+  var NS="teemocracy-tm", BASE="https://abacus.jasoncameron.dev/get/"+NS+"/";
+  var SRC=["yt","ig","wa","fb","direct"];
+  var TEES=[["01_cutie","Cutie Nahi, Kranti Hoon"],["02_azaad","Hum Auratein Azaad Hain"],["05_kachori","Ek Kachori Do Samosa"],["06_votes","Kitne Votes The?"],["03_99problems","99 Problems & Patriarchy"],["04_resistance","Resistance Is Existence"],["07_fall","Fall Of Patriarchy"],["08_achedin","Ache Din Kab Leak Honge?"],["12_no","नो"],["11_dhakkad","Aisi Dhakkad Hai"],["09_cultural","Cultural Shock"],["10_difference","Making A Difference"],["20_aurat","Unfiltered Aurat"]];
+  function get(k){ return fetch(BASE+k,{cache:"no-store"}).then(function(r){return r.json()}).then(function(j){return j.value||0}).catch(function(){return 0}); }
+  function tile(label,v){ return '<div class="tile"><b>'+v+'</b><span>'+label+'</span></div>'; }
+  function load(){
+    document.getElementById("ts").textContent="loading…";
+    var vis=Promise.all(SRC.map(function(s){return get("visit_"+s)}));
+    var taps=Promise.all(TEES.map(function(t){ return Promise.all([get("tee_"+t[0]+"_all")].concat(SRC.map(function(s){return get("tee_"+t[0]+"_"+s)}))); }));
+    var other=Promise.all([get("store_all")]);
+    Promise.all([vis,taps,other]).then(function(r){
+      var v=r[0], tp=r[1], o=r[2];
+      var total=v.reduce(function(a,b){return a+b},0);
+      document.getElementById("visits").innerHTML=tile("total",total)+SRC.map(function(s,i){return tile(s,v[i])}).join("");
+      var max=Math.max.apply(null,tp.map(function(x){return x[0]}).concat([1]));
+      var rows=TEES.map(function(t,i){return {name:t[1],c:tp[i]}}).sort(function(a,b){return b.c[0]-a.c[0]});
+      document.getElementById("tees").innerHTML=rows.map(function(r){
+        return "<tr><td>"+r.name+"</td><td class=n>"+r.c[0]+"</td><td style='width:30%'><div class=bar style='width:"+Math.round(100*r.c[0]/max)+"%'></div></td>"+r.c.slice(1).map(function(x){return "<td class=n>"+x+"</td>"}).join("")+"</tr>";
+      }).join("");
+      document.getElementById("other").innerHTML=tile("'open full store' taps",o[0]);
+      document.getElementById("ts").textContent="updated "+new Date().toLocaleTimeString();
+    });
+  }
+  document.getElementById("refresh").onclick=load; load();
+})();
+</script>
+</body>
+</html>

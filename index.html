@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TEE-MOCRACY</title>
+<meta name="description" content="Slogan tees for people who say it out loud. Rs 799 delivered, printed in India.">
+<meta property="og:title" content="TEE-MOCRACY — wear what you'd say out loud">
+<meta property="og:description" content="13 slogan tees. Rs 799 delivered. Printed in India when you order.">
+<meta property="og:image" content="tee_01_cutie.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=Archivo+Narrow:wght@500;700&display=swap">
+<style>
+/* Layout: one column of placards. Each tee is a placard the viewer taps; the tap is the vote. */
+:root{
+  --paper:#f4f2ee; --ink:#141414; --red:#b21e26; --lav:#c8bee6; --mute:#6b6866; --line:#d9d5ce;
+  --display:"Archivo",system-ui,sans-serif; --narrow:"Archivo Narrow","Arial Narrow",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --paper:#141414; --ink:#f4f2ee; --mute:#a8a4a0; --line:#2b2a28; color-scheme:dark } }
+:root[data-theme="dark"]{ --paper:#141414; --ink:#f4f2ee; --mute:#a8a4a0; --line:#2b2a28; color-scheme:dark }
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--display)}
+body{padding-block:28px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:560px;margin:0 auto}
+header{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
+.brand{font-weight:900;font-size:clamp(28px,8vw,40px);letter-spacing:-.02em;line-height:1}
+.brand span{color:var(--red)}
+.tag{font-family:var(--narrow);font-weight:500;font-size:17px;color:var(--mute);text-wrap:balance}
+.strip{display:flex;gap:8px;flex-wrap:wrap;font-family:var(--narrow);font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.06em}
+.strip span{border:1px solid var(--line);padding:5px 9px;border-radius:999px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.tee{display:block;text-decoration:none;color:inherit;border:1px solid var(--line);background:var(--paper);overflow:hidden;border-radius:6px}
+.tee:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.tee img{display:block;width:100%;aspect-ratio:600/695;object-fit:cover;background:#f2f2f2}
+.tee .cap{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:9px 10px 11px;border-top:1px solid var(--line)}
+.tee .name{font-family:var(--narrow);font-weight:700;font-size:15px;line-height:1.15;min-width:0}
+.tee .price{font-weight:700;font-size:13px;color:var(--red);white-space:nowrap;font-variant-numeric:tabular-nums}
+.tee.soon .price{color:var(--mute)}
+.cta{margin-top:22px;display:grid;gap:10px}
+.btn{display:block;text-align:center;text-decoration:none;background:var(--ink);color:var(--paper);font-weight:700;padding:16px 18px;border-radius:6px;font-size:17px}
+.btn:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.fine{font-family:var(--narrow);color:var(--mute);font-size:14px;line-height:1.45;text-align:center}
+@media (prefers-reduced-motion:no-preference){ .tee{transition:transform .15s ease} .tee:active{transform:scale(.98)} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">TEE-<span>MOCRACY</span></div>
+    <p class="tag">Wear what you'd say out loud. Tap a tee to see it on the store.</p>
+    <div class="strip"><span>₹799 delivered</span><span>240 GSM oversized</span><span>Printed in India</span><span>XS–XXL</span></div>
+  </header>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="cta">
+    <a class="btn" id="store" href="https://tee-mocracy.qikink.com" data-k="store">Open the full store →</a>
+    <p class="fine">Printed to order, dispatched in 2–3 days, delivered in 4–7. Print defects replaced free within 7 days.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  var STORE = "https://tee-mocracy.qikink.com";
+  var NS = "teemocracy-tm";
+  // live: product page exists on the store. Pending designs go to the store home until Qikink approves them.
+  var TEES = [
+    ["01_cutie","Cutie Nahi, Kranti Hoon",13639,true],
+    ["02_azaad","Hum Auratein Azaad Hain",13640,true],
+    ["05_kachori","Ek Kachori Do Samosa",13644,true],
+    ["06_votes","Kitne Votes The?",13646,true],
+    ["03_99problems","99 Problems & Patriarchy",13641,true],
+    ["04_resistance","Resistance Is Existence",13643,true],
+    ["07_fall","Fall Of Patriarchy",13648,true],
+    ["08_achedin","Ache Din Kab Leak Honge?",13649,true],
+    ["12_no","नो",13657,true],
+    ["11_dhakkad","Aisi Dhakkad Hai",13655,true],
+    ["09_cultural","Cultural Shock / संस्कारी शॉक",13651,true],
+    ["10_difference","Making A Difference (trying)",13653,true],
+    ["20_aurat","Unfiltered Aurat",13353,true]
+  ];
+  var src = (new URLSearchParams(location.search).get("s") || "direct").replace(/[^a-z0-9]/gi,"").slice(0,12).toLowerCase() || "direct";
+
+  function hit(key){
+    var u = "https://abacus.jasoncameron.dev/hit/" + NS + "/" + key;
+    try { fetch(u, {mode:"no-cors", keepalive:true, cache:"no-store"}); } catch(e){}
+  }
+
+  var grid = document.getElementById("grid");
+  TEES.forEach(function(t){
+    var id=t[0], name=t[1], pid=t[2], live=t[3];
+    var a = document.createElement("a");
+    a.className = "tee" + (live ? "" : " soon");
+    a.href = live ? STORE + "/products/" + pid : STORE;
+    a.setAttribute("data-k", "tee_" + id);
+    a.innerHTML = '<img loading="lazy" src="tee_' + id + '.jpg" alt="' + name + ' tee">' +
+      '<div class="cap"><div class="name">' + name + '</div><div class="price">' + (live ? "₹799" : "soon") + '</div></div>';
+    grid.appendChild(a);
+  });
+
+  hit("visit_" + src);
+  document.addEventListener("click", function(e){
+    var a = e.target.closest("a[data-k]");
+    if (!a) return;
+    hit(a.getAttribute("data-k") + "_" + src);
+    hit(a.getAttribute("data-k") + "_all");
+  });
+})();
+</script>
+</body>
+</html>
