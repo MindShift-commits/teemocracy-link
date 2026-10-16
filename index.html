@@ -79,9 +79,30 @@ header{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
     ["10_difference","Making A Difference (trying)",13653,true],
     ["20_aurat","Unfiltered Aurat",13353,true]
   ];
-  var src = (new URLSearchParams(location.search).get("s") || "direct").replace(/[^a-z0-9]/gi,"").slice(0,12).toLowerCase() || "direct";
+  // Tracking rules (keep in sync with stats.html):
+  //  - one counter request per event (the counter service rate-limits bursts)
+  //  - a visit counts once per browser session; a tee tap counts once per tee per session
+  //  - visits from the owner's browser (flagged by opening stats.html or ?s=me) are not counted
+  //  - ?qa=1 writes to a separate test namespace so testing never touches real numbers
+  var q = new URLSearchParams(location.search);
+  var QA = q.get("qa") === "1";
+  if (QA) NS = "teemocracy-qa";
+  var SOURCES = ["yt","ig","wa","fb","direct"];
+  var raw = (q.get("s") || "direct").toLowerCase();
+  function store(fn){ try { return fn(); } catch(e){ return null; } }
+  if (raw === "me") store(function(){ localStorage.setItem("tm_owner","1"); });
+  var src = SOURCES.indexOf(raw) >= 0 ? raw : "other";
+  var owner = !QA && store(function(){ return localStorage.getItem("tm_owner") === "1"; });
 
+  function once(flag){
+    // true the first time this flag is seen in this browser session
+    var seen = store(function(){ return sessionStorage.getItem("tm_" + NS + "_" + flag); });
+    if (seen) return false;
+    store(function(){ sessionStorage.setItem("tm_" + NS + "_" + flag, "1"); });
+    return true;
+  }
   function hit(key){
+    if (owner) return;
     var u = "https://abacus.jasoncameron.dev/hit/" + NS + "/" + key;
     try { fetch(u, {mode:"no-cors", keepalive:true, cache:"no-store"}); } catch(e){}
   }
@@ -98,12 +119,12 @@ header{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
     grid.appendChild(a);
   });
 
-  hit("visit_" + src);
+  if (once("visit")) hit("visit_" + src);
   document.addEventListener("click", function(e){
     var a = e.target.closest("a[data-k]");
     if (!a) return;
-    hit(a.getAttribute("data-k") + "_" + src);
-    hit(a.getAttribute("data-k") + "_all");
+    var k = a.getAttribute("data-k");
+    if (once(k)) hit(k + "_" + src);
   });
 })();
 </script>

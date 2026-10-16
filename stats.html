@@ -10,65 +10,151 @@
 @media (prefers-color-scheme: dark){:root{--paper:#141414;--ink:#f4f2ee;--mute:#a8a4a0;--line:#2b2a28;--bar:#4a3f73;color-scheme:dark}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.4 system-ui,sans-serif;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.wrap{max-width:720px;margin:0 auto}
+.wrap{max-width:760px;margin:0 auto}
 h1{font-size:22px;margin:0 0 4px}
-.sub{color:var(--mute);margin:0 0 18px;font-size:14px}
+.sub{color:var(--mute);margin:0 0 18px;font-size:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 h2{font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);margin:26px 0 8px}
-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;min-width:520px}
 th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
 th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute);font-weight:600}
-td.n{text-align:right;white-space:nowrap}
+td.n,th.n{text-align:right;white-space:nowrap}
 .bar{height:8px;background:var(--bar);border-radius:4px;min-width:2px}
-.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
 .tile{border:1px solid var(--line);border-radius:6px;padding:10px 12px}
 .tile b{display:block;font-size:26px;line-height:1.1}
 .tile span{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.05em}
+.tile i{display:block;font-style:normal;font-size:12px;color:var(--mute);margin-top:2px}
 button{font:inherit;padding:8px 14px;border:1px solid var(--line);background:transparent;color:inherit;border-radius:6px;cursor:pointer}
-.note{color:var(--mute);font-size:13px;margin-top:20px}
+button:disabled{opacity:.5;cursor:default}
+.note{color:var(--mute);font-size:13px;margin-top:20px;line-height:1.5}
+.warn{color:var(--red)}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>TEE-MOCRACY link stats</h1>
-  <p class="sub">Visits to the link page and taps per tee, since 15 Oct 2026. <button id="refresh">Refresh</button> <span id="ts"></span></p>
+  <h1 id="title">TEE-MOCRACY link stats</h1>
+  <p class="sub"><button id="refresh">Refresh</button><span id="status"></span></p>
 
-  <h2>Visits by source</h2>
+  <h2>Visits to the link page</h2>
   <div class="tiles" id="visits"></div>
 
-  <h2>Taps per tee (all sources)</h2>
-  <table><thead><tr><th>Tee</th><th>Taps</th><th></th><th>yt</th><th>ig</th><th>wa</th><th>fb</th><th>direct</th></tr></thead><tbody id="tees"></tbody></table>
+  <h2>Tee taps (unique per visit session)</h2>
+  <div class="scroll"><table>
+    <thead id="thead"></thead>
+    <tbody id="tees"></tbody>
+  </table></div>
 
-  <h2>Other</h2>
-  <div class="tiles" id="other"></div>
+  <h2>"Open full store" taps</h2>
+  <div class="tiles" id="store"></div>
 
-  <p class="note">Taps = someone opened the link page and tapped that tee. Compare with orders in the Qikink dashboard to see drop-off per tee. Sources come from the link used: ?s=yt, ?s=ig, ?s=wa, ?s=fb.</p>
+  <p class="note">
+    A visit = one person opening the link page (reloads and coming back don't count again). A tap = that person tapping a tee (counted once per tee per visit).
+    Tap rate = taps ÷ visits from that source. Drop-off per tee = its taps here vs its orders in Qikink.<br>
+    "—" means that number couldn't be loaded right now; press Refresh. Opening this page marks this browser as yours, so your own visits to the link page aren't counted.<br>
+    Meta ad cards that link straight to a product page skip this page — see per-card clicks in Ads Manager for those.
+  </p>
 </div>
 <script>
 (function(){
-  var NS="teemocracy-tm", BASE="https://abacus.jasoncameron.dev/get/"+NS+"/";
-  var SRC=["yt","ig","wa","fb","direct"];
-  var TEES=[["01_cutie","Cutie Nahi, Kranti Hoon"],["02_azaad","Hum Auratein Azaad Hain"],["05_kachori","Ek Kachori Do Samosa"],["06_votes","Kitne Votes The?"],["03_99problems","99 Problems & Patriarchy"],["04_resistance","Resistance Is Existence"],["07_fall","Fall Of Patriarchy"],["08_achedin","Ache Din Kab Leak Honge?"],["12_no","नो"],["11_dhakkad","Aisi Dhakkad Hai"],["09_cultural","Cultural Shock"],["10_difference","Making A Difference"],["20_aurat","Unfiltered Aurat"]];
-  function get(k){ return fetch(BASE+k,{cache:"no-store"}).then(function(r){return r.json()}).then(function(j){return j.value||0}).catch(function(){return 0}); }
-  function tile(label,v){ return '<div class="tile"><b>'+v+'</b><span>'+label+'</span></div>'; }
-  function load(){
-    document.getElementById("ts").textContent="loading…";
-    var vis=Promise.all(SRC.map(function(s){return get("visit_"+s)}));
-    var taps=Promise.all(TEES.map(function(t){ return Promise.all([get("tee_"+t[0]+"_all")].concat(SRC.map(function(s){return get("tee_"+t[0]+"_"+s)}))); }));
-    var other=Promise.all([get("store_all")]);
-    Promise.all([vis,taps,other]).then(function(r){
-      var v=r[0], tp=r[1], o=r[2];
-      var total=v.reduce(function(a,b){return a+b},0);
-      document.getElementById("visits").innerHTML=tile("total",total)+SRC.map(function(s,i){return tile(s,v[i])}).join("");
-      var max=Math.max.apply(null,tp.map(function(x){return x[0]}).concat([1]));
-      var rows=TEES.map(function(t,i){return {name:t[1],c:tp[i]}}).sort(function(a,b){return b.c[0]-a.c[0]});
-      document.getElementById("tees").innerHTML=rows.map(function(r){
-        return "<tr><td>"+r.name+"</td><td class=n>"+r.c[0]+"</td><td style='width:30%'><div class=bar style='width:"+Math.round(100*r.c[0]/max)+"%'></div></td>"+r.c.slice(1).map(function(x){return "<td class=n>"+x+"</td>"}).join("")+"</tr>";
-      }).join("");
-      document.getElementById("other").innerHTML=tile("'open full store' taps",o[0]);
-      document.getElementById("ts").textContent="updated "+new Date().toLocaleTimeString();
-    });
+  var q = new URLSearchParams(location.search);
+  var QA = q.get("qa") === "1";
+  var NS = QA ? "teemocracy-qa" : "teemocracy-tm";
+  var BASE = "https://abacus.jasoncameron.dev/get/" + NS + "/";
+  var SRC = ["yt","ig","wa","fb","direct","other"];
+  var LABEL = {yt:"YouTube", ig:"Instagram", wa:"WhatsApp", fb:"Facebook / Meta", direct:"Direct", other:"Other"};
+  var TEES = [["01_cutie","Cutie Nahi, Kranti Hoon"],["02_azaad","Hum Auratein Azaad Hain"],["05_kachori","Ek Kachori Do Samosa"],["06_votes","Kitne Votes The?"],["03_99problems","99 Problems & Patriarchy"],["04_resistance","Resistance Is Existence"],["07_fall","Fall Of Patriarchy"],["08_achedin","Ache Din Kab Leak Honge?"],["12_no","नो"],["11_dhakkad","Aisi Dhakkad Hai"],["09_cultural","Cultural Shock"],["10_difference","Making A Difference"],["20_aurat","Unfiltered Aurat"]];
+
+  try { if (!QA) localStorage.setItem("tm_owner","1"); } catch(e){}
+  if (QA) document.getElementById("title").textContent = "TEST namespace (qa) — not real data";
+
+  var sleep = function(ms){ return new Promise(function(r){ setTimeout(r, ms); }); };
+
+  // One request at a time; the counter service rejects bursts with 429.
+  // Returns a number, 0 for "never counted" (404), or null if it could not be read.
+  async function get(key){
+    for (var attempt = 0; attempt < 5; attempt++){
+      try {
+        var r = await fetch(BASE + key, {cache:"no-store"});
+        if (r.status === 404) return 0;
+        if (r.status === 429){
+          var t = await r.text(); var m = /in ([\d.]+)s/.exec(t);
+          await sleep(Math.min(8000, (m ? parseFloat(m[1]) : 1.5) * 1000 + 300));
+          continue;
+        }
+        if (!r.ok){ await sleep(800); continue; }
+        var j = await r.json();
+        return typeof j.value === "number" ? j.value : null;
+      } catch(e){ await sleep(800); }
+    }
+    return null;
   }
-  document.getElementById("refresh").onclick=load; load();
+
+  var fmt = function(v){ return v === null ? "—" : String(v); };
+  var sum = function(arr){ if (arr.some(function(v){ return v === null; })) return null; return arr.reduce(function(a,b){ return a+b; }, 0); };
+  var pct = function(a,b){ return (a === null || b === null || b === 0) ? "" : Math.round(100*a/b) + "% tap rate"; };
+  function tile(label, v, sub){ return '<div class="tile"><b>'+fmt(v)+'</b><span>'+label+'</span>'+(sub?'<i>'+sub+'</i>':'')+'</div>'; }
+
+  var busy = false;
+  async function load(){
+    if (busy) return; busy = true;
+    var btn = document.getElementById("refresh"), st = document.getElementById("status");
+    btn.disabled = true;
+    var visits = {}, store = {}, taps = {}, done = 0;
+    var active = SRC.slice();
+    function progress(total){ st.textContent = "loading " + done + "/" + total + "…"; }
+
+    progress(SRC.length);
+    for (var i = 0; i < SRC.length; i++){ visits[SRC[i]] = await get("visit_" + SRC[i]); done++; progress(SRC.length); }
+    // A tap needs a visit from the same source first, so sources with 0 visits are skipped (saves ~70 requests).
+    active = SRC.filter(function(s){ return visits[s] !== 0; });
+    var total = SRC.length + active.length * (TEES.length + 1);
+    renderVisits(visits, {}, {});
+    for (var s of active){
+      store[s] = await get("store_" + s); done++; progress(total);
+      for (var t of TEES){
+        taps[t[0]] = taps[t[0]] || {};
+        taps[t[0]][s] = await get("tee_" + t[0] + "_" + s); done++; progress(total);
+      }
+      renderTable(visits, taps, active);
+    }
+    SRC.forEach(function(s){ if (active.indexOf(s) < 0){ store[s] = 0; TEES.forEach(function(t){ taps[t[0]] = taps[t[0]] || {}; taps[t[0]][s] = 0; }); } });
+    renderVisits(visits, taps, store);
+    renderTable(visits, taps, active);
+    var failed = Object.values(visits).concat(Object.values(store)).concat([].concat.apply([], TEES.map(function(t){ return Object.values(taps[t[0]]); }))).filter(function(v){ return v === null; }).length;
+    st.innerHTML = "updated " + new Date().toLocaleTimeString() + (failed ? ' · <span class="warn">' + failed + ' numbers didn\'t load (shown as —) — press Refresh</span>' : " · all numbers loaded");
+    btn.disabled = false; busy = false;
+  }
+
+  function renderVisits(visits, taps, store){
+    var tv = sum(SRC.map(function(s){ return visits[s]; }));
+    var allTaps = function(s){ return sum(TEES.map(function(t){ return (taps[t[0]] || {})[s] === undefined ? null : taps[t[0]][s]; })); };
+    var tt = sum(SRC.map(function(s){ return allTaps(s); }));
+    document.getElementById("visits").innerHTML =
+      tile("total", tv, pct(tt, tv)) +
+      SRC.filter(function(s){ return s !== "other" || visits.other; }).map(function(s){ return tile(LABEL[s], visits[s], pct(allTaps(s), visits[s])); }).join("");
+    var ts = sum(SRC.map(function(s){ return store[s] === undefined ? null : store[s]; }));
+    document.getElementById("store").innerHTML = tile("total", ts) + SRC.filter(function(s){ return store[s]; }).map(function(s){ return tile(LABEL[s], store[s]); }).join("");
+  }
+
+  function renderTable(visits, taps, active){
+    var cols = active.length ? active : SRC.slice(0,5);
+    document.getElementById("thead").innerHTML = "<tr><th>Tee</th><th class=n>Taps</th><th style='width:24%'></th>" + cols.map(function(s){ return "<th class=n>" + s + "</th>"; }).join("") + "</tr>";
+    var rows = TEES.map(function(t){
+      var by = taps[t[0]] || {};
+      var vals = SRC.map(function(s){ return by[s] === undefined ? (active.indexOf(s) < 0 ? 0 : null) : by[s]; });
+      return {name:t[1], total:sum(vals), by:by};
+    });
+    var max = Math.max.apply(null, rows.map(function(r){ return r.total || 0; }).concat([1]));
+    rows.sort(function(a,b){ return (b.total === null ? -1 : b.total) - (a.total === null ? -1 : a.total); });
+    document.getElementById("tees").innerHTML = rows.map(function(r){
+      return "<tr><td>" + r.name + "</td><td class=n><b>" + fmt(r.total) + "</b></td><td><div class=bar style='width:" + Math.round(100*(r.total||0)/max) + "%'></div></td>" +
+        cols.map(function(s){ return "<td class=n>" + fmt(r.by[s] === undefined ? null : r.by[s]) + "</td>"; }).join("") + "</tr>";
+    }).join("");
+  }
+
+  document.getElementById("refresh").onclick = load;
+  load();
 })();
 </script>
 </body>
