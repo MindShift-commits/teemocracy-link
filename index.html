@@ -119,11 +119,26 @@ header{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
     grid.appendChild(a);
   });
 
+  // Microsoft Clarity (session recordings + heatmaps). Project "TEE-MOCRACY link page".
+  // Not loaded for the owner's browser or QA runs, so recordings are real visitors only.
+  var CLARITY = !owner && !QA;
+  function cl(){ if (CLARITY && window.clarity) try { window.clarity.apply(null, arguments); } catch(e){} }
+  if (CLARITY){
+    (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+      t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+      y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "yyz4v3womf");
+    cl("set", "source", src);
+  }
+
   if (once("visit")) hit("visit_" + src);
   document.addEventListener("click", function(e){
     var a = e.target.closest("a[data-k]");
     if (!a) return;
     var k = a.getAttribute("data-k");
+    cl("event", k);                       // e.g. tee_01_cutie, store
+    cl("set", "tapped", k.replace(/^tee_/, ""));
+    cl("upgrade", "tap");                 // always keep recordings of sessions that tapped
     if (once(k)) hit(k + "_" + src);
   });
 })();
