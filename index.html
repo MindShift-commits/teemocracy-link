@@ -41,7 +41,15 @@ header{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
 .btn:focus-visible{outline:3px solid var(--red);outline-offset:2px}
 .fine{font-family:var(--narrow);color:var(--mute);font-size:14px;line-height:1.45;text-align:center}
 @media (prefers-reduced-motion:no-preference){ .tee{transition:transform .15s ease} .tee:active{transform:scale(.98)} }
+/* Instant feedback after a tap: the store can take a few seconds to open inside Instagram/Facebook. */
+.tee{position:relative}
+.tee .going{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;background:rgba(20,20,20,.72);color:#fff;font-weight:700;font-size:15px;text-align:center;padding:12px}
+.tee.loading .going{display:flex}
+.going i{width:28px;height:28px;border:3px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn.loading{opacity:.7}
 </style>
+<link rel="preconnect" href="https://tee-mocracy.qikink.com"><link rel="dns-prefetch" href="https://tee-mocracy.qikink.com">
 </head>
 <body>
 <div class="wrap">
@@ -115,7 +123,8 @@ header{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
     a.href = live ? STORE + "/products/" + pid : STORE;
     a.setAttribute("data-k", "tee_" + id);
     a.innerHTML = '<img loading="lazy" src="tee_' + id + '.jpg" alt="' + name + ' tee">' +
-      '<div class="cap"><div class="name">' + name + '</div><div class="price">' + (live ? "₹799" : "soon") + '</div></div>';
+      '<div class="cap"><div class="name">' + name + '</div><div class="price">' + (live ? "₹799" : "soon") + '</div></div>' +
+      '<div class="going" aria-hidden="true"><i></i>Opening store…</div>';
     grid.appendChild(a);
   });
 
@@ -132,15 +141,40 @@ header{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
   }
 
   if (once("visit")) hit("visit_" + src);
+
+  // Start fetching the product page as soon as a finger touches a tee, so the store opens faster.
+  var warmed = {};
+  function prefetch(a){
+    var href = a && a.href;
+    if (!href || warmed[href]) return;
+    warmed[href] = 1;
+    var l = document.createElement("link");
+    l.rel = "prefetch"; l.href = href; l.as = "document";
+    document.head.appendChild(l);
+  }
+  document.addEventListener("touchstart", function(e){ prefetch(e.target.closest && e.target.closest("a[data-k]")); }, {passive:true});
+  document.addEventListener("mouseover", function(e){ prefetch(e.target.closest && e.target.closest("a[data-k]")); });
+
+  var leaving = false;
   document.addEventListener("click", function(e){
     var a = e.target.closest("a[data-k]");
     if (!a) return;
+    if (leaving){ e.preventDefault(); return; }   // ignore repeat taps while the store is opening
+    leaving = true;
+    a.classList.add("loading");
     var k = a.getAttribute("data-k");
     cl("event", k);                       // e.g. tee_01_cutie, store
     cl("set", "tapped", k.replace(/^tee_/, ""));
     cl("upgrade", "tap");                 // always keep recordings of sessions that tapped
     if (once(k)) hit(k + "_" + src);
+    // Navigate explicitly too: some in-app browsers drop the first tap on a link.
+    var href = a.href;
+    e.preventDefault();
+    setTimeout(function(){ location.href = href; }, 60);
+    // If they come back (or navigation stalls), let them tap again.
+    setTimeout(function(){ leaving = false; a.classList.remove("loading"); }, 8000);
   });
+  window.addEventListener("pageshow", function(){ leaving = false; document.querySelectorAll(".loading").forEach(function(x){ x.classList.remove("loading"); }); });
 })();
 </script>
 </body>
