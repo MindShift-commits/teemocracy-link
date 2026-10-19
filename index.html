@@ -6,7 +6,7 @@
 <title>TEE-MOCRACY</title>
 <meta name="description" content="Slogan tees for people who say it out loud. Rs 799 delivered, printed in India.">
 <meta property="og:title" content="TEE-MOCRACY — wear what you'd say out loud">
-<meta property="og:description" content="13 slogan tees. Rs 799 delivered. Printed in India when you order.">
+<meta property="og:description" content="Oversized slogan tees. Rs 799 delivered. Printed in India when you order.">
 <meta property="og:image" content="tee_01_cutie.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=Archivo+Narrow:wght@500;700&display=swap">
@@ -20,12 +20,12 @@
 :root[data-theme="dark"]{ --paper:#141414; --ink:#f4f2ee; --mute:#a8a4a0; --line:#2b2a28; color-scheme:dark }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--display)}
-body{padding-block:28px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body{padding-block:16px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .wrap{max-width:560px;margin:0 auto}
-header{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
-.brand{font-weight:900;font-size:clamp(28px,8vw,40px);letter-spacing:-.02em;line-height:1}
+header{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.brand{font-weight:900;font-size:clamp(24px,6.5vw,32px);letter-spacing:-.02em;line-height:1}
 .brand span{color:var(--red)}
-.tag{font-family:var(--narrow);font-weight:500;font-size:17px;color:var(--mute);text-wrap:balance}
+.tag{font-family:var(--narrow);font-weight:500;font-size:15px;color:var(--mute);text-wrap:balance}
 .strip{display:flex;gap:8px;flex-wrap:wrap;font-family:var(--narrow);font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.06em}
 .strip span{border:1px solid var(--line);padding:5px 9px;border-radius:999px}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
@@ -36,6 +36,17 @@ header{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
 .tee .name{font-family:var(--narrow);font-weight:700;font-size:15px;line-height:1.15;min-width:0}
 .tee .price{font-weight:700;font-size:13px;color:var(--red);white-space:nowrap;font-variant-numeric:tabular-nums}
 .tee.soon .price{color:var(--mute)}
+.hero{border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:14px;text-decoration:none;color:inherit;display:block;position:relative}
+.hero img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;object-position:50% 55%;background:#f2f2f2}
+.hero .hcap{padding:12px 14px 14px;display:grid;gap:10px}
+.hero .hname{font-weight:900;font-size:clamp(22px,6.4vw,30px);letter-spacing:-.02em;line-height:1.05}
+.hero .hsub{font-family:var(--narrow);font-size:15px;color:var(--mute);line-height:1.3}
+.hero .hbtn{display:flex;justify-content:space-between;align-items:center;background:var(--red);color:#fff;font-weight:700;font-size:17px;padding:15px 16px;border-radius:6px}
+.hero .hbtn small{font-family:var(--narrow);font-weight:500;font-size:13px;opacity:.9}
+.hero .going{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;background:rgba(20,20,20,.72);color:#fff;font-weight:700;font-size:15px;text-align:center;padding:12px}
+.hero.loading .going{display:flex}
+.trust{font-family:var(--narrow);font-size:13px;color:var(--mute);line-height:1.5;margin:0 0 18px;text-align:center}
+.more{font-family:var(--narrow);font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--mute);margin:0 0 10px}
 .cta{margin-top:22px;display:grid;gap:10px}
 .btn{display:block;text-align:center;text-decoration:none;background:var(--ink);color:var(--paper);font-weight:700;padding:16px 18px;border-radius:6px;font-size:17px}
 .btn:focus-visible{outline:3px solid var(--red);outline-offset:2px}
@@ -55,10 +66,21 @@ header{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
 <div class="wrap">
   <header>
     <div class="brand">TEE-<span>MOCRACY</span></div>
-    <p class="tag">Wear what you'd say out loud. Tap a tee to see it on the store.</p>
-    <div class="strip"><span>₹799 delivered</span><span>240 GSM oversized</span><span>Printed in India</span><span>XS–XXL</span></div>
+    <p class="tag">Wear what you'd say out loud.</p>
   </header>
 
+  <a class="hero" id="hero" href="https://tee-mocracy.qikink.com">
+    <img id="heroimg" src="tee_01_cutie.jpg" alt="">
+    <div class="hcap">
+      <div class="hname" id="heroname"></div>
+      <div class="hsub">240 GSM oversized · XS–XXL · unisex fit</div>
+      <div class="hbtn"><span>Get this tee →</span><small>₹799, delivery included</small></div>
+    </div>
+    <div class="going" aria-hidden="true"><i></i>Opening store…</div>
+  </a>
+  <p class="trust">Secure checkout via Razorpay · printed to order in India · ships in 2–3 days · print defects replaced free</p>
+
+  <p class="more">More tees · ₹799 each</p>
   <div class="grid" id="grid"></div>
 
   <div class="cta">
@@ -115,8 +137,21 @@ header{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
     try { fetch(u, {mode:"no-cors", keepalive:true, cache:"no-store"}); } catch(e){}
   }
 
+  // Hero tee: ?t=<id prefix> (e.g. ?t=01 or ?t=cutie) picks which tee fills the first screen. Default: Cutie.
+  var want = (q.get("t") || "01").toLowerCase();
+  var HERO = TEES[0];
+  TEES.forEach(function(t){ if (t[0].indexOf(want) >= 0 && t[3]) HERO = t; });
+  var hero = document.getElementById("hero");
+  hero.href = STORE + "/products/" + HERO[2];
+  hero.setAttribute("data-k", "tee_" + HERO[0]);
+  hero.setAttribute("data-via", "hero");
+  document.getElementById("heroimg").src = "tee_" + HERO[0] + ".jpg";
+  document.getElementById("heroimg").alt = HERO[1] + " tee";
+  document.getElementById("heroname").textContent = HERO[1];
+
   var grid = document.getElementById("grid");
   TEES.forEach(function(t){
+    if (t === HERO) return;
     var id=t[0], name=t[1], pid=t[2], live=t[3];
     var a = document.createElement("a");
     a.className = "tee" + (live ? "" : " soon");
@@ -165,6 +200,7 @@ header{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
     var k = a.getAttribute("data-k");
     cl("event", k);                       // e.g. tee_01_cutie, store
     cl("set", "tapped", k.replace(/^tee_/, ""));
+    cl("set", "via", a.getAttribute("data-via") || "grid");
     cl("upgrade", "tap");                 // always keep recordings of sessions that tapped
     if (once(k)) hit(k + "_" + src);
     // Navigate explicitly too: some in-app browsers drop the first tap on a link.
